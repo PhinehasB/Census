@@ -1,6 +1,6 @@
 """
 Tkinter OOP UI (Python 3.10+) for Oracle-backed Census DB
-- Depends on: cx_Oracle (pip install cx_Oracle)
+- Depends on: oracledb (pip install oracledb)
 - Requires Oracle Instant Client or full client on PATH/LD_LIBRARY_PATH.
 - Uses stored procedures & ref cursors defined in oracle_backend_objects.sql
 
@@ -19,16 +19,16 @@ from dataclasses import dataclass
 import datetime as dt
 
 try:
-    import cx_Oracle  # type: ignore
+    import oracledb  # type: ignore
 except Exception as e:
-    cx_Oracle = None
+    oracledb = None
 
 # ------------------------------
 # Configuration (EDIT THESE)
 # ------------------------------
 ORACLE_HOST = "localhost"
 ORACLE_PORT = 1521
-ORACLE_SERVICE = "FREEPDB1"   # e.g., ORCLPDB1 / FREEPDB1
+ORACLE_SERVICE = ""   # e.g., ORCLPDB1 / FREEPDB1
 ORACLE_USER = "C##Phine"
 ORACLE_PASSWORD = "1234"
 
@@ -56,10 +56,10 @@ class Person:
 # ------------------------------
 class OracleDB:
     def __init__(self, host: str, port: int, service: str, user: str, password: str):
-        if cx_Oracle is None:
-            raise RuntimeError("cx_Oracle not installed. Run: pip install cx_Oracle")
-        dsn = cx_Oracle.makedsn(host, port, service_name=service)
-        self.conn = cx_Oracle.connect(user=user, password=password, dsn=dsn)
+        if oracledb is None:
+            raise RuntimeError("oracledb not installed. Run: pip install oracledb")
+        dsn = oracledb.makedsn(host, port, service_name=service)
+        self.conn = oracledb.connect(user=user, password=password, dsn=dsn)
         self.conn.autocommit = False
 
     def close(self):
@@ -71,7 +71,7 @@ class OracleDB:
     # Stored procedure: insert_person -> returns new person_id
     def sp_insert_person(self, p: Person) -> int:
         cur = self.conn.cursor()
-        out_person_id = cur.var(cx_Oracle.NUMBER)
+        out_person_id = cur.var(oracledb.NUMBER)
         cur.callproc(
             "INSERT_PERSON",
             [p.ea_code, p.structure_no, p.household_no, p.line_no, p.full_name,
@@ -100,7 +100,7 @@ class OracleDB:
     # Stored procedure returning ref cursor: get_person_by_id
     def sp_get_person_by_id(self, person_id: int) -> dict | None:
         cur = self.conn.cursor()
-        out_cursor = cur.var(cx_Oracle.CURSOR)
+        out_cursor = cur.var(oracledb.CURSOR)
         cur.callproc("GET_PERSON_BY_ID", [person_id, out_cursor])
         rows = out_cursor.getvalue().fetchall()
         cols = [d[0].lower() for d in out_cursor.getvalue().description] if rows else []
@@ -113,7 +113,7 @@ class OracleDB:
     # Stored procedure returning ref cursor: search by locality
     def sp_search_persons_by_locality(self, locality_code: str) -> list[dict]:
         cur = self.conn.cursor()
-        out_cursor = cur.var(cx_Oracle.CURSOR)
+        out_cursor = cur.var(oracledb.CURSOR)
         cur.callproc("SEARCH_PERSONS_BY_LOCALITY", [locality_code, out_cursor])
         c = out_cursor.getvalue()
         cols = [d[0].lower() for d in c.description]
