@@ -23,7 +23,7 @@ except Exception as e:
 # ------------------------------
 ORACLE_HOST = "localhost"
 ORACLE_PORT = 1521
-ORACLE_SERVICE = "FREEPDB1"
+ORACLE_SERVICE = ""
 ORACLE_USER = "C##Phine"
 ORACLE_PASSWORD = "1234"
 
